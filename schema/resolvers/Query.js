@@ -1,8 +1,11 @@
-module.exports = (users) => ({
-    user: (parent, args) => {
+const User = require('../../models/User');
+
+module.exports = {
+    user: async (parent, args) => {
         
-        const user = users.find((u) => u.id == args.id);
+        const user = await User.findById(args.id);
         return user;
+        
     },
-    users: (parent, args) => users,
-})
+    users: async () => await User.find({}),
+}

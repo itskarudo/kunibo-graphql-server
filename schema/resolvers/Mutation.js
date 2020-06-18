@@ -32,8 +32,7 @@ module.exports = {
         // validate the data using Joi
         const { error } = registerSchema.validate({ username, email, password, password2 });
 
-        if (error)
-            return { error: error.message, user: null }
+        if (error) throw error;
 
         // Check if username or email are already used
         const sameUsernameOrEmail = await User.findOne({ $or: [{username}, {email}] });
@@ -41,9 +40,9 @@ module.exports = {
         if (sameUsernameOrEmail) {
             
             if (sameUsernameOrEmail.username === username)
-                return { error: "Username already registered", user: null }
+                throw new Error("Username already registered")
             else if (sameUsernameOrEmail.email === email)
-                return { error: "Email already registered", user: null }
+            throw new Error("Email already registered")
 
         }
 
@@ -55,6 +54,6 @@ module.exports = {
         await user.save();
 
 
-        return { user, error: null };
+        return { ...user._doc, password: null, _id: user.id };
     }
 }

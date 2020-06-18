@@ -1,11 +1,12 @@
 # import User from "User.graphql"
-# import RegisterUser from "RegisterUser.graphql"
+# import AuthData from "AuthData.graphql"
 
 type Query {
     users: [User]
     user(id: ID!): User
+    login(email: String!, password: String!): AuthData!
 }
 
 type Mutation {
-    register(username: String!, email: String!, password: String!, password2: String!): RegisterUser
+    register(username: String!, email: String!, password: String!, password2: String!): User
 }

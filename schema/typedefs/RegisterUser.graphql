@@ -1,6 +1,0 @@
-# import User from "User.graphql"
-
-type RegisterUser {
-    user: User
-    error: String
-}

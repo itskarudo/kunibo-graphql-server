@@ -4,7 +4,7 @@
 type Query {
     users: [User]
     user(id: ID!): User
-    login(email: String!, password: String!): AuthData!
+    login(usernameOrEmail: String!, password: String!): AuthData!
 }
 
 type Mutation {

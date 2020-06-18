@@ -5,9 +5,8 @@ const jwt = require('jsonwebtoken');
 module.exports = {
     user: async (parent, args) => {
         const user = await User.findById(args.id);
-        return user;
+        return { ...user._doc, password: null, _id: user.id };
     },
-    users: async () => await User.find({}),
     login: async (parent, args) => {
 
         const { usernameOrEmail, password } = args;

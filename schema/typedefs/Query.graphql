@@ -2,7 +2,6 @@
 # import AuthData from "AuthData.graphql"
 
 type Query {
-    users: [User]
     user(id: ID!): User
     login(usernameOrEmail: String!, password: String!): AuthData!
 }

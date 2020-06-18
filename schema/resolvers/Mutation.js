@@ -32,7 +32,7 @@ module.exports = {
         // validate the data using Joi
         const { error } = registerSchema.validate({ username, email, password, password2 });
 
-        if (error) 
+        if (error)
             return { error: error.message, user: null }
 
         // Check if username or email are already used
@@ -49,7 +49,7 @@ module.exports = {
 
         // if it passes all the tests:
 
-        const hashedPass = hashPass(password);
+        const hashedPass = await hashPass(password);
         const user = new User({ username, email, password: hashedPass });
 
         await user.save();

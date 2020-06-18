@@ -1,0 +1,8 @@
+type Book {
+    id: ID!
+    ownerId: ID!
+    name: String!
+    author: String
+    year: Int
+    cover: String
+}

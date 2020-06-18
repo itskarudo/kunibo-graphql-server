@@ -1,8 +1,10 @@
 # import User from "User.graphql"
 # import AuthData from "AuthData.graphql"
+# import Book from "Book.graphql"
 
 type Query {
     user(id: ID!): User
+    books: [Book]
     login(usernameOrEmail: String!, password: String!): AuthData!
 }
 

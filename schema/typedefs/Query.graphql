@@ -3,11 +3,13 @@
 # import Book from "Book.graphql"
 
 type Query {
-    user(id: ID!): User
-    books: [Book]
+    user(id: ID!): User!
+    books: [Book]!
+    book(id: ID!): Book
     login(usernameOrEmail: String!, password: String!): AuthData!
 }
 
 type Mutation {
     register(username: String!, email: String!, password: String!, password2: String!): User
+    addBook(name: String!, author: String, year: Int, cover: String): Book
 }

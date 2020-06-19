@@ -5,18 +5,37 @@ const jwt = require('jsonwebtoken');
 
 module.exports = {
     user: async (parent, args) => {
-        const user = await User.findById(args.id);
+        let user;
+        try {
+            user = await User.findById(args.id);
+        } catch (e) {
+            throw new Error("Invalid id");
+        }
         return { ...user._doc, password: null, _id: user.id };
     },
     books: async (parent, args, req) => {
-        const { isAuth } = req;
-        if (!isAuth)
+        const { isAuth, userId } = req;
+        if (!isAuth || !userId)
             throw new Error("Unauthorized");
         
-        const books = await Book.find({ ownerId: req.userId });
+        const books = await Book.find({ ownerId: userId });
 
         return books;
 
+    },
+
+    book: async(parent, args, req) => {
+        const { isAuth, userId } = req;
+        if (!isAuth || !userId)
+            throw new Error("Unauthorized");
+        
+        let book;
+        try {
+            book = await Book.findOne({ $and: [{ ownerId: userId }, { _id: args.id }] });
+        } catch(e) {
+            throw new Error("Book not found");
+        }
+        return book;
     },
     login: async (parent, args) => {
 

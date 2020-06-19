@@ -5,6 +5,7 @@ const { MONGO_URI } = process.env;
 const mongoOptions = {
     useNewUrlParser: true,
     useUnifiedTopology: true,
+    useCreateIndex: true,
 }
 
 mongoose.connect(MONGO_URI, mongoOptions).then(() => {

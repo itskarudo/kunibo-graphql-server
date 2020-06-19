@@ -1,4 +1,5 @@
 const User = require('../../models/User');
+const Book = require('../../models/Book');
 const Joi = require('@hapi/joi');
 const bcrypt = require('bcryptjs');
 
@@ -55,5 +56,21 @@ module.exports = {
 
 
         return { ...user._doc, password: null, _id: user.id };
+    },
+    addBook: async (parent, args, req) => {
+        const { isAuth, userId } = req;
+        if (!isAuth || !userId)
+            throw new Error("Unauthorized");
+        
+        const {name, author, year, cover} = args;
+
+        const book = new Book({
+            name, author, year, cover, ownerId: userId
+        });
+
+        await book.save();
+
+        return book;
+
     }
 }

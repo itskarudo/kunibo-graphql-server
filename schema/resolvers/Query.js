@@ -4,13 +4,18 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 module.exports = {
-    user: async (parent, args) => {
+    user: async (parent, args, req) => {
+        const { isAuth, userId } = req;
+        if (!isAuth || !userId)
+            throw new Error("Unauthorized");
+
         let user;
         try {
-            user = await User.findById(args.id);
+            user = await User.findById(userId);
         } catch (e) {
-            throw new Error("Invalid id");
+            throw new Error("User not found");
         }
+        
         return { ...user._doc, password: null, _id: user.id };
     },
     books: async (parent, args, req) => {

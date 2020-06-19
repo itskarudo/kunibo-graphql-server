@@ -36,7 +36,12 @@ module.exports = {
         if (error) throw error;
 
         // Check if username or email are already used
-        const sameUsernameOrEmail = await User.findOne({ $or: [{username}, {email}] });
+        let sameUsernameOrEmail;
+        try {
+            sameUsernameOrEmail = await User.findOne({ $or: [{username}, {email}] });
+        } catch(e) {
+            throw new Error("An error has accured");
+        }
 
         if (sameUsernameOrEmail) {
             
@@ -50,7 +55,13 @@ module.exports = {
         // if it passes all the tests:
 
         const hashedPass = await hashPass(password);
-        const user = new User({ username, email, password: hashedPass });
+
+        let user;
+        try {
+            user = new User({ username, email, password: hashedPass });
+        } catch(e) {
+            throw new Error("An error has accured");
+        }
 
         await user.save();
 
@@ -64,9 +75,14 @@ module.exports = {
         
         const {name, author, year, cover} = args;
 
-        const book = new Book({
-            name, author, year, cover, ownerId: userId
-        });
+        let book;
+        try {
+            book = new Book({
+                name, author, year, cover, ownerId: userId
+            });
+        } catch(e) {
+            throw new Error("An error has accured");
+        }
 
         await book.save();
 

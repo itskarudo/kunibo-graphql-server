@@ -18,7 +18,12 @@ module.exports = {
         if (!isAuth || !userId)
             throw new Error("Unauthorized");
         
-        const books = await Book.find({ ownerId: userId });
+        let books;
+        try {
+            books = await Book.find({ ownerId: userId });
+        } catch(e) {
+            throw new Error("An error has accured");
+        }
 
         return books;
 

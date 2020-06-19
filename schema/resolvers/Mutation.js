@@ -10,7 +10,8 @@ const registerSchema = Joi.object({
                 .max(20)
                 .required(),
     email: Joi.string()
-                .email({ minDomainSegments: 2 }),
+                .email({ minDomainSegments: 2 })
+                .required(),
     password: Joi.string()
                 .min(8).max(30)
                 .required(),
@@ -18,6 +19,16 @@ const registerSchema = Joi.object({
                 .valid(Joi.ref('password'))
                 .required()
 
+});
+
+const editSchema = Joi.object({
+    username: Joi.string()
+                .alphanum()
+                .min(4)
+                .max(20),
+    email: Joi.string()
+                .email({ minDomainSegments: 2 }),
+    password: Joi.string().min(8).max(30)
 });
 
 const hashPass = async (password) => {
@@ -67,6 +78,50 @@ module.exports = {
 
 
         return { ...user._doc, password: null, _id: user.id };
+    },
+    editUser: async (parent, args, req) => {
+        const { isAuth, userId } = req;
+        if (!isAuth || !userId)
+            throw new Error("Unauthorized");
+
+        const { username, email, newPassword, newPassword2, password } = args;
+
+        let user;
+        try {
+            user = await User.findById(userId);
+        } catch (e) {
+            throw new Error("User not found");
+        }
+
+        const passMatch = await bcrypt.compare(password, user.password);
+        if (!passMatch)
+            throw new Error("Incorrect password");
+
+        const { error } = editSchema.validate({ username, email, password: newPassword});
+        if (error) throw error;
+
+        if (newPassword !== newPassword2)
+            throw new Error("Passwords does not match")
+
+        let userData = { username, email, password: newPassword };
+
+        for (item in userData) 
+            if (!userData[item]) delete userData[item];
+
+        if (userData['password']) {
+            const salt = await bcrypt.genSalt();
+            userData['password'] = await bcrypt.hash(userData['password'], salt);
+        }
+
+        try {
+            await user.updateOne(userData);
+        } catch (e) {
+            throw new Error("An error has accured");
+        }
+
+
+        return { ...user._doc, password: null, _id: user.id }
+
     },
     addBook: async (parent, args, req) => {
         const { isAuth, userId } = req;

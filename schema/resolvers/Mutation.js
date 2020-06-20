@@ -174,7 +174,25 @@ module.exports = {
         return book;
 
     },
-    removeBook: async (parent, args, req) => {
+    editBook: async (parent, args, req) => {
+        const { isAuth, userId } = req;
+        if (!isAuth || !userId)
+            throw new Error("Unauthorized");
+
+        let bookData = {...args};
+        delete bookData['id'];
+
+        let book;
+        try {
+            book = await Book.findOneAndUpdate({ $and: [{ _id: args.id }, { ownerId: userId }] }, bookData);
+        } catch(e) {
+            throw new Error("Book not found")
+        }
+        
+
+        return book;
+    },
+    deleteBook: async (parent, args, req) => {
         const { isAuth, userId } = req;
         if (!isAuth || !userId)
             throw new Error("Unauthorized");

@@ -10,4 +10,4 @@ const mongoOptions = {
 
 mongoose.connect(MONGO_URI, mongoOptions).then(() => {
     console.log(`Connected to database`);
-}).catch((e) => console.log(e));
+}).catch(() => {throw new Error("Failed to connect to database")});

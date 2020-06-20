@@ -12,6 +12,7 @@ type Query {
 type Mutation {
     register(username: String!, email: String!, password: String!, password2: String!): User
     editUser(username: String, email: String, newPassword: String, newPassword2: String, password: String!): User
+    deleteUser(password: String!): User
     addBook(name: String!, author: String, year: Int, cover: String): Book
     removeBook(id: String!): Book
 }

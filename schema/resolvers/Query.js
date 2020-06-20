@@ -16,7 +16,10 @@ module.exports = {
             throw new Error("User not found");
         }
         
-        return { ...user._doc, password: null, _id: user.id };
+        if (!user)
+            return null
+        else
+            return { ...user._doc, password: null, _id: user.id };
     },
     books: async (parent, args, req) => {
         const { isAuth, userId } = req;

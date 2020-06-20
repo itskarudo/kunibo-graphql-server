@@ -77,7 +77,10 @@ module.exports = {
         await user.save();
 
 
-        return { ...user._doc, password: null, _id: user.id };
+        if (!user)
+            return user
+        else
+            return { ...user._doc, password: null, _id: user.id };
     },
     editUser: async (parent, args, req) => {
         const { isAuth, userId } = req;
@@ -119,8 +122,35 @@ module.exports = {
             throw new Error("An error has accured");
         }
 
+        if (!user)
+            return user
+        else
+            return { ...user._doc, password: null, _id: user.id }
 
-        return { ...user._doc, password: null, _id: user.id }
+    },
+    deleteUser: async (parent, args, req) => {
+        const { isAuth, userId } = req;
+        if (!isAuth || !userId)
+            throw new Error("Unauthorized");
+
+        let user;
+        try {
+            user = await User.findById(userId);
+        } catch (e) {
+            throw new Error("User not found");
+        }
+
+        const passMatch = await bcrypt.compare(args.password, user.password);
+
+        if (!passMatch)
+            throw new Error("Incorrect password");
+
+        await user.deleteOne();
+
+        if (!user)
+            return user
+        else
+            return { ...user._doc, password: null, _id: userId }
 
     },
     addBook: async (parent, args, req) => {

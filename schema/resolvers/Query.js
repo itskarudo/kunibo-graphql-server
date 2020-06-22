@@ -1,7 +1,10 @@
 const User = require('../../models/User');
 const Book = require('../../models/Book');
+const Token = require('../../models/Token');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+
+const tokenList = {};
 
 module.exports = {
     user: async (parent, args, req) => {
@@ -36,7 +39,6 @@ module.exports = {
         return books;
 
     },
-
     book: async(parent, args, req) => {
         const { isAuth, userId } = req;
         if (!isAuth || !userId)
@@ -71,7 +73,36 @@ module.exports = {
             expiresIn: '7d'
         });
 
-        return { id: user.id, token, refreshToken }
+        const dbToken = new Token({
+            userId: user.id,
+            refreshToken,
+        });
 
+        await dbToken.save();
+
+        return { id: user.id, token, refreshToken };
+
+    },
+    token: async (parent, args) => {
+        const { refreshToken } = args;
+        
+        const dbToken = await Token.findOne({ refreshToken });
+
+        if (!dbToken)
+            throw new Error("Invalid request");
+
+
+        const { JWT_SECRET, REFRESH_SECRET } = process.env;
+
+        try {
+            jwt.verify(refreshToken, REFRESH_SECRET);
+        } catch (e) {
+            throw new Error("Unauthorized");
+        }
+
+        const token = jwt.sign({ userId: dbToken.userId }, JWT_SECRET, {
+            expiresIn: '1m'
+        });
+        return token;
     }
 }

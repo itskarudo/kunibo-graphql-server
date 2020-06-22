@@ -2,11 +2,13 @@ const jwt = require('jsonwebtoken');
 
 module.exports = (req, res, next) => {
     const authHeader = req.get('Authorization');
+    // if the Authorization header is not provided
     if (!authHeader) {
         req.isAuth = false;
         return next();
     }
     const token = authHeader.split(' ')[1]; // Bearer <token>
+    // if there is no token in the headers
     if (!token || token === "") {
         req.isAuth = false;
         return next();
@@ -21,6 +23,7 @@ module.exports = (req, res, next) => {
         return next();
     }
 
+    // if there is no payload
     if (!decodedToken) {
         req.isAuth = false;
         return next();

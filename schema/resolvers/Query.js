@@ -62,12 +62,16 @@ module.exports = {
         if (!passMatch)
             throw new Error("email or password is incorrect");
 
-        const { JWT_SECRET } = process.env;
-        const token = jwt.sign({ userId: user.id, email: user.email}, JWT_SECRET, {
-            expiresIn: '1h'
+        const { JWT_SECRET, REFRESH_SECRET } = process.env;
+        const token = jwt.sign({ userId: user.id}, JWT_SECRET, {
+            expiresIn: '1m'
         });
 
-        return { id: user.id, token, tokenExpiration: 1 }
+        const refreshToken = jwt.sign({ userId: user.id }, REFRESH_SECRET, {
+            expiresIn: '7d'
+        });
+
+        return { id: user.id, token, refreshToken }
 
     }
 }

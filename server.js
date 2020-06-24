@@ -10,7 +10,7 @@ const app = express();
 
 app.use(isAuth);
 
-app.use(graphqlHTTP({
+app.use('/graphql', graphqlHTTP({
     schema: Schema,
     graphiql: true,
 }));

@@ -105,7 +105,4 @@ module.exports = {
         });
         return token;
     },
-    test: (parent, args) => {
-        return "fuck you";
-    }
 }

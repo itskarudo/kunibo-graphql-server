@@ -8,6 +8,7 @@ type Query {
     book(id: ID!): Book
     login(usernameOrEmail: String!, password: String!): AuthData!
     token(refreshToken: String!): String
+    test: String
 }
 
 type Mutation {

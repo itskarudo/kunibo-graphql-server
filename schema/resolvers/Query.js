@@ -10,13 +10,13 @@ module.exports = {
     user: async (parent, args, req) => {
         const { isAuth, userId } = req;
         if (!isAuth || !userId)
-            throw new Error("Unauthorized");
+            throw new Error("UNAUTHORIZED");
 
         let user;
         try {
             user = await User.findById(userId);
         } catch (e) {
-            throw new Error("User not found");
+            throw new Error("USER_NOT_FOUND");
         }
         
         if (!user)
@@ -27,13 +27,13 @@ module.exports = {
     books: async (parent, args, req) => {
         const { isAuth, userId } = req;
         if (!isAuth || !userId)
-            throw new Error("Unauthorized");
+            throw new Error("UNAUTHORIZED");
         
         let books;
         try {
             books = await Book.find({ ownerId: userId });
         } catch(e) {
-            throw new Error("An error has accured");
+            throw new Error("BOOK_NOT_FOUND");
         }
 
         return books;
@@ -42,13 +42,13 @@ module.exports = {
     book: async(parent, args, req) => {
         const { isAuth, userId } = req;
         if (!isAuth || !userId)
-            throw new Error("Unauthorized");
+            throw new Error("UNAUTHORIZED");
         
         let book;
         try {
             book = await Book.findOne({ $and: [{ ownerId: userId }, { _id: args.id }] });
         } catch(e) {
-            throw new Error("Book not found");
+            throw new Error("BOOK_NOT_FOUND");
         }
         return book;
     },
@@ -58,11 +58,11 @@ module.exports = {
         const user = await User.findOne({ $or: [{username: usernameOrEmail}, {email: usernameOrEmail}] });
 
         if (!user)
-            throw new Error("email or password is incorrect");
+            throw new Error("CREDS_NOT_CORRECT");
 
         const passMatch = await bcrypt.compare(password, user.password);
         if (!passMatch)
-            throw new Error("email or password is incorrect");
+            throw new Error("CREDS_NOT_CORRECT");
 
         const { JWT_SECRET, REFRESH_SECRET } = process.env;
         const token = jwt.sign({ userId: user.id}, JWT_SECRET, {
@@ -89,7 +89,7 @@ module.exports = {
         const dbToken = await Token.findOne({ refreshToken });
 
         if (!dbToken)
-            throw new Error("Invalid request");
+            throw new Error("INVALID_REQUEST");
 
 
         const { JWT_SECRET, REFRESH_SECRET } = process.env;
@@ -97,12 +97,15 @@ module.exports = {
         try {
             jwt.verify(refreshToken, REFRESH_SECRET);
         } catch (e) {
-            throw new Error("Unauthorized");
+            throw new Error("UNAUTHORIZED");
         }
 
         const token = jwt.sign({ userId: dbToken.userId }, JWT_SECRET, {
             expiresIn: '1m'
         });
         return token;
+    },
+    test: (parent, args) => {
+        return "fuck you";
     }
 }

@@ -1,34 +1,34 @@
 const User = require('../../models/User');
 const Book = require('../../models/Book');
-const Joi = require('@hapi/joi');
+const yup = require('yup');
 const bcrypt = require('bcryptjs');
 
-const registerSchema = Joi.object({
-    username: Joi.string()
-                .alphanum()
-                .min(4)
-                .max(20)
+const registerSchema = yup.object({
+    username: yup.string()
+                    .required()
+                    .min(4)
+                    .max(20),
+    email: yup.string()
+                .email()
                 .required(),
-    email: Joi.string()
-                .email({ minDomainSegments: 2 })
-                .required(),
-    password: Joi.string()
-                .min(8).max(30)
-                .required(),
-    password2: Joi.any()
-                .valid(Joi.ref('password'))
-                .required()
-
+    password: yup.string()
+                    .min(8)
+                    .max(30)
+                    .required(),
+    password2: yup.string()
+                    .oneOf([yup.ref('password'), null], 'Passwords does not match')
+    
 });
 
-const editSchema = Joi.object({
-    username: Joi.string()
-                .alphanum()
-                .min(4)
-                .max(20),
-    email: Joi.string()
-                .email({ minDomainSegments: 2 }),
-    password: Joi.string().min(8).max(30)
+const editSchema = yup.object({
+    username: yup.string()
+                    .min(4)
+                    .max(20),
+    email: yup.string()
+                .email(),
+    password: yup.string()
+                    .min(8)
+                    .max(30)
 });
 
 const hashPass = async (password) => {
@@ -41,25 +41,28 @@ module.exports = {
     register: async (parent, args) => {
         const { username, email, password, password2 } = args;
 
-        // validate the data using Joi
-        const { error } = registerSchema.validate({ username, email, password, password2 });
+        // validate the data using yup
+        try {
+            await registerSchema.validate({ username, email, password, password2 });
+        } catch (err) {
+            if (err) throw new Error(err.errors);
+        }
 
-        if (error) throw error;
 
         // Check if username or email are already used
         let sameUsernameOrEmail;
         try {
             sameUsernameOrEmail = await User.findOne({ $or: [{username}, {email}] });
         } catch(e) {
-            throw new Error("An error has accured");
+            throw new Error("INTERNAL_ERROR");
         }
 
         if (sameUsernameOrEmail) {
             
             if (sameUsernameOrEmail.username === username)
-                throw new Error("Username already registered")
+                throw new Error("USERNAME_EXISTS")
             else if (sameUsernameOrEmail.email === email)
-            throw new Error("Email already registered")
+            throw new Error("EMAIL_EXISTS")
 
         }
 
@@ -71,7 +74,7 @@ module.exports = {
         try {
             user = new User({ username, email, password: hashedPass });
         } catch(e) {
-            throw new Error("An error has accured");
+            throw new Error("INTERNAL_ERROR");
         }
 
         await user.save();
@@ -85,7 +88,7 @@ module.exports = {
     editUser: async (parent, args, req) => {
         const { isAuth, userId } = req;
         if (!isAuth || !userId)
-            throw new Error("Unauthorized");
+            throw new Error("UNAUTHORIZED");
 
         const { username, email, newPassword, newPassword2, password } = args;
 
@@ -93,18 +96,21 @@ module.exports = {
         try {
             user = await User.findById(userId);
         } catch (e) {
-            throw new Error("User not found");
+            throw new Error("USER_NOT_FOUND");
         }
 
         const passMatch = await bcrypt.compare(password, user.password);
         if (!passMatch)
-            throw new Error("Incorrect password");
+            throw new Error("PASSWORD_INCORRECT");
 
-        const { error } = editSchema.validate({ username, email, password: newPassword});
-        if (error) throw error;
+        try {
+            await editSchema.validate({ username, email, password: newPassword});
+        } catch (err) {
+            throw new Error(err.errors);
+        }
 
         if (newPassword !== newPassword2)
-            throw new Error("Passwords does not match")
+            throw new Error("PASSWORDS_NOT_MATCHED")
 
         let userData = { username, email, password: newPassword };
 
@@ -119,7 +125,7 @@ module.exports = {
         try {
             await user.updateOne(userData);
         } catch (e) {
-            throw new Error("An error has accured");
+            throw new Error("INTERNAL_ERROR");
         }
 
         if (!user)
@@ -131,19 +137,19 @@ module.exports = {
     deleteUser: async (parent, args, req) => {
         const { isAuth, userId } = req;
         if (!isAuth || !userId)
-            throw new Error("Unauthorized");
+            throw new Error("UNAUTHORIZED");
 
         let user;
         try {
             user = await User.findById(userId);
         } catch (e) {
-            throw new Error("User not found");
+            throw new Error("USER_NOT_FOUND");
         }
 
         const passMatch = await bcrypt.compare(args.password, user.password);
 
         if (!passMatch)
-            throw new Error("Incorrect password");
+            throw new Error("INCORRECT_PASSWORD");
 
         await user.deleteOne();
 
@@ -156,28 +162,28 @@ module.exports = {
     addBook: async (parent, args, req) => {
         const { isAuth, userId } = req;
         if (!isAuth || !userId)
-            throw new Error("Unauthorized");
+            throw new Error("UNAUTHORIZED");
         
         const {name, author, year, cover} = args;
 
         let book;
+        book = new Book({
+            name, author, year, cover, ownerId: userId
+        });
+        
         try {
-            book = new Book({
-                name, author, year, cover, ownerId: userId
-            });
+            await book.save();
         } catch(e) {
-            throw new Error("An error has accured");
+            throw new Error("INTERNAL_ERROR");
         }
-
-        await book.save();
-
+        
         return book;
 
     },
     editBook: async (parent, args, req) => {
         const { isAuth, userId } = req;
         if (!isAuth || !userId)
-            throw new Error("Unauthorized");
+            throw new Error("UNAUTHORIZED");
 
         let bookData = {...args};
         delete bookData['id'];
@@ -186,7 +192,7 @@ module.exports = {
         try {
             book = await Book.findOneAndUpdate({ $and: [{ _id: args.id }, { ownerId: userId }] }, bookData);
         } catch(e) {
-            throw new Error("Book not found")
+            throw new Error("BOOK_NOT_FOUND")
         }
         
 
@@ -195,13 +201,13 @@ module.exports = {
     deleteBook: async (parent, args, req) => {
         const { isAuth, userId } = req;
         if (!isAuth || !userId)
-            throw new Error("Unauthorized");
+            throw new Error("UNAUTHORIZED");
         
         let book;
         try {
             book = await Book.findOneAndDelete({ $and: [{ ownerId: userId }, { _id: args.id }] });
         } catch (e) {
-            throw new Error("Book not found");
+            throw new Error("BOOK_NOT_FOUND");
         }
         return book;
     }

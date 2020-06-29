@@ -85,7 +85,7 @@ module.exports = {
         else
             return { ...user._doc, password: null, _id: user.id };
     },
-    editUser: async (parent, args, req) => {
+    editUser: async (parent, args, {req}) => {
         const { isAuth, userId } = req;
         if (!isAuth || !userId)
             throw new Error("UNAUTHORIZED");
@@ -134,7 +134,7 @@ module.exports = {
             return { ...user._doc, password: null, _id: user.id }
 
     },
-    deleteUser: async (parent, args, req) => {
+    deleteUser: async (parent, args, {req}) => {
         const { isAuth, userId } = req;
         if (!isAuth || !userId)
             throw new Error("UNAUTHORIZED");
@@ -180,7 +180,7 @@ module.exports = {
         return book;
 
     },
-    editBook: async (parent, args, req) => {
+    editBook: async (parent, args, {req}) => {
         const { isAuth, userId } = req;
         if (!isAuth || !userId)
             throw new Error("UNAUTHORIZED");
@@ -198,7 +198,7 @@ module.exports = {
 
         return book;
     },
-    deleteBook: async (parent, args, req) => {
+    deleteBook: async (parent, args, {req}) => {
         const { isAuth, userId } = req;
         if (!isAuth || !userId)
             throw new Error("UNAUTHORIZED");
@@ -210,5 +210,13 @@ module.exports = {
             throw new Error("BOOK_NOT_FOUND");
         }
         return book;
+    },
+    revokeTokensForUser: async (parent, args) => {
+        try {
+            await User.findByIdAndUpdate(args.id, { $inc: { tokenVersion: 1 } });
+            return true;
+        } catch (e) {
+            return false;
+        }
     }
 }

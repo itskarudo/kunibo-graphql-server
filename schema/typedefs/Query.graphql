@@ -7,7 +7,6 @@ type Query {
     books: [Book]!
     book(id: ID!): Book
     login(usernameOrEmail: String!, password: String!): AuthData!
-    token(refreshToken: String!): String
 }
 
 type Mutation {
@@ -16,5 +15,6 @@ type Mutation {
     deleteUser(password: String!): User
     addBook(name: String!, author: String, year: Int, cover: String): Book
     editBook(id: ID!, name: String, author: String, year: Int, cover: String): Book
-    deleteBook(id: String!): Book
+    deleteBook(id: ID!): Book
+    revokeTokensForUser(id: ID!): Boolean
 }

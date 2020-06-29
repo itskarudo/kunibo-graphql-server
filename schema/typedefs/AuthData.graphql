@@ -1,5 +1,4 @@
 type AuthData {
-    id: ID!
+    userId: ID!
     token: String!
-    refreshToken: String!
 }

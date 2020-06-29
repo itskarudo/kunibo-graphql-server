@@ -14,6 +14,10 @@ const UserSchema = new mongoose.Schema({
     password: {
         type: String,
         required: String,
+    },
+    tokenVersion: {
+        type: Number,
+        default: 0
     }
 });
 
